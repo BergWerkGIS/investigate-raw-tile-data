@@ -80,6 +80,7 @@
 				},
 				onEachFeature: function (feature, layer) {
 					var popupString = '<div class="popup">';
+					popupString += `${feature.properties.tid}<hr />`;
 					popupString += `id: ${feature.id}<br />`;
 					if (feature.properties) {
 						for (var k in feature.properties) {

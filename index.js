@@ -95,6 +95,7 @@ server.on('request', function (req, res) {
 									var feats = JSON.parse(t2.toGeoJSON(lyr_name)).features;
 									feats.forEach(function (feat) {
 										feat.properties.lyr = lyr_name;
+										feat.properties.tid = `${z}/${x}/${y}`;
 										collection.features.push(feat);
 									});
 								})
