@@ -43,8 +43,6 @@ server.on('request', function (req, res) {
 			fs.readFile(filename, mode, function (err, file) {
 				if (isHtml) {
 					file = file.replace(/MAPBOX_ACCESS_TOKEN/g, token);
-					console.log(file);
-					console.log(token);
 				}
 				res.writeHead(200, no_cache_hdr);
 				res.write(file, mode);
@@ -82,11 +80,12 @@ server.on('request', function (req, res) {
 						var file = Buffer.concat(rawData);
 						zlib.gunzip(file, function (err, data) {
 							if (err) { throw err; }
-							var tile = new mapnik.VectorTile(z, x, y/*, { buffer_size: 0 }*/);
+							var tile = new mapnik.VectorTile(z, x, y, { buffer_size: 256 });
 							tile.setData(file, function (err) {
 								if (err) { throw err; }
-								var t2 = new mapnik.VectorTile(z, x, y/*, { buffer_size: 0 }*/);
-								//if (z > 15) { simplify_distance = 0.0; }
+								var t2 = new mapnik.VectorTile(z, x, y, { buffer_size: 256 });
+								//simplify lower zoom level to not have too detailed geometries
+								if (z > 15) { simplify_distance = 0.0; }
 								t2.composite([tile], { reencode: true, simplify_distance: simplify_distance });
 								var collection = { type: 'FeatureCollection', features: [] };
 								t2.paintedLayers().forEach(function (lyr_name) {

@@ -63,6 +63,7 @@
 		var geojsonTileLayer = new L.TileLayer.GeoJSON(
 			geojsonURL
 			, {
+				maxZoom: 20
 				//clipTiles: true,
 				//clipTiles: false
 				//unique: function (feature) { return feature.id; }
@@ -109,21 +110,18 @@
 			}
 		);
 
-		//map.addLayer(geojsonTileLayer);
-
-
 		var map = L.map('map', {
 			maxZoom: 20,
 			center: [lat, lng],
 			zoom: z,
-			layers: [bg, geojsonTileLayer]
+			layers: [bg /** don't show**, geojsonTileLayer*/]
 		});
 
 		var baseMaps = {
-			'background': bg
+			'slient pencil': bg
 		};
 		var overlays = {
-			'vector tiles': geojsonTileLayer
+			'Mapbox Streets': geojsonTileLayer
 		};
 		L.control.layers(baseMaps, overlays).addTo(map);
 
