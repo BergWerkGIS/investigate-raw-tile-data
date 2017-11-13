@@ -56,8 +56,9 @@ server.on('request', function (req, res) {
 			var y = +zxy[3]
 			var simplify_distance = 10.0;
 
-			var tile_url = `https://api.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/${z}/${x}/${y}.vector.pbf?access_token=${token}`;
-			//console.log(`remote url: ${tile_url}`);
+			var url_parts = url.parse(req.url, true);
+			var query = url_parts.query;
+			var tile_url = `https://api.tiles.mapbox.com/v4/${query.ts}/${z}/${x}/${y}.vector.pbf?access_token=${token}`;
 			https.get(tile_url, (response) => {
 				const statusCode = res.statusCode;
 				let error;
@@ -74,6 +75,12 @@ server.on('request', function (req, res) {
 				response.on('data', (chunk) => rawData.push(chunk));
 				response.on('end', () => {
 					try {
+						if (response.statusCode !== 200) {
+							res.writeHead(response.statusCode, no_cache_hdr);
+							res.end();
+							return;
+						}
+
 						//at this point data is an array of Buffers
 						//so Buffer.concat() can make us a new Buffer
 						//of all of them together

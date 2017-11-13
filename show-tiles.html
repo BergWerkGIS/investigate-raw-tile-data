@@ -22,13 +22,28 @@
 		.leaflet-tile {
 			border: solid red 1px;
 		}
+
+		.my-custom-control {
+			padding: 5px 10px;
+			background: rgba(0, 0, 0, 0.5);
+			color: #fff;
+			font-size: 11px;
+			line-height: 18px;
+			border-radius: 5px;
+		}
+
+		/*.my-custom-control:empty {
+			display: none;
+		}*/
 	</style>
 </head>
 
 <body>
 	<div id="map"></div>
 
+	<script src="/leaflet/geojson-utils.js"></script>
 	<script src="/leaflet/leaflet.js"></script>
+	<script src="/leaflet/leaflet-pip.js"></script>
 	<script src="/leaflet/TileLayer.GeoJSON.js"></script>
 	<script>
 		var z = 11;
@@ -42,14 +57,6 @@
 		}
 		console.log(location);
 
-		var geojsonMarkerOptions = {
-			radius: 3,
-			fillColor: "#ff7800",
-			color: "#000",
-			weight: 1,
-			opacity: 1,
-			fillOpacity: 0.8
-		};
 
 		var bg = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=MAPBOX_ACCESS_TOKEN', {
 			maxZoom: 20,
@@ -59,9 +66,49 @@
 			id: 'lr1k.a9ea5b54'
 		});
 
+
+		var map = L.map('map', {
+			maxZoom: 20,
+			center: [lat, lng],
+			zoom: z,
+			layers: [bg /** don't show**, geojsonTileLayer*/]
+		});
+
+
+		var MyCustomControl = L.Control.extend({
+			options: { position: 'bottomleft' }
+			, onAdd: function (map) {
+				var div = L.DomUtil.create('div', 'my-custom-control');
+				div.innerHTML += '<input id="tileset" type="textbox" value="mapbox.mapbox-streets-v7" onchange="changeUrl(this.value)" />';
+				return div;
+			}
+			//, setContent: function (content) { this.getContainer().innerHTML = content; }
+		});
+
+		var myCustomControl = new MyCustomControl().addTo(map);
+		//myCustomControl.setContent('mapbox.mapbox-streets-v7');
+
+		// document.getElementById('tileset').on('change keyup paste', function () {
+		// 	console.log('change');
+		// });
+
+		function changeUrl(url){
+			geojsonTileLayer._url = geojsonURL + '?ts=' + url;
+		}
+
+		var geojsonMarkerOptions = {
+			radius: 3,
+			fillColor: "#ff7800",
+			color: "#000",
+			weight: 1,
+			opacity: 1,
+			fillOpacity: 0.8
+		};
+
 		var geojsonURL = '/tiles/{z}/{x}/{y}.pbf';
 		var geojsonTileLayer = new L.TileLayer.GeoJSON(
-			geojsonURL
+			//geojsonURL
+			geojsonURL + '?ts=' + document.getElementById('tileset').value
 			, {
 				maxZoom: 20
 				//clipTiles: true,
@@ -105,26 +152,30 @@
 					}
 					layer.on('click', function (e) {
 						console.log(JSON.stringify(e.target.feature));
+						console.log(geojsonTileLayer);
+						var match = leafletPip.pointInLayer(e.latlng, geojsonTileLayer.geojsonLayer, false);
+						console.log(match);
+						if (match.length) {
+							for (var index = 0; index < match.length; index++) {
+								var element = match[index];
+								console.log(JSON.stringify(element.feature));
+							}
+						}
 					});
 					//console.log(feature);
 				}
 			}
 		);
 
-		var map = L.map('map', {
-			maxZoom: 20,
-			center: [lat, lng],
-			zoom: z,
-			layers: [bg /** don't show**, geojsonTileLayer*/]
-		});
 
 		var baseMaps = {
 			'silent pencil': bg
 		};
 		var overlays = {
-			'Mapbox Streets': geojsonTileLayer
+			'VTs': geojsonTileLayer
 		};
 		L.control.layers(baseMaps, overlays).addTo(map);
+
 
 		map.on('moveend', function (ev) {
 			var z = map.getZoom();
